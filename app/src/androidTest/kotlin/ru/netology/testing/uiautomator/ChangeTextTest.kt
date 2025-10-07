@@ -13,7 +13,6 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 
-
 const val SETTINGS_PACKAGE = "com.android.settings"
 const val MODEL_PACKAGE = "ru.netology.testing.uiautomator"
 
@@ -25,52 +24,6 @@ class ChangeTextTest {
     private lateinit var device: UiDevice
     private val textToSet = "Netology"
 
-//    @Test
-//    fun testInternetSettings() {
-//        // Press home
-//        device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
-//        device.pressHome()
-//
-//        // Wait for launcher
-//        val launcherPackage = device.launcherPackageName
-//        device.wait(Until.hasObject(By.pkg(launcherPackage)), TIMEOUT)
-//        waitForPackage(SETTINGS_PACKAGE)
-//
-//        val context = ApplicationProvider.getApplicationContext<Context>()
-//        val intent = context.packageManager.getLaunchIntentForPackage(SETTINGS_PACKAGE)
-//        context.startActivity(intent)
-//        device.wait(Until.hasObject(By.pkg(SETTINGS_PACKAGE)), TIMEOUT)
-//
-//        device.findObject(
-//            UiSelector().resourceId("android:id/title").instance(0)
-//        ).click()
-//    }
-
-//    @Test
-//    fun testChangeText() {
-//        // Press home
-//        device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
-//        device.pressHome()
-//
-//        // Wait for launcher
-//        val launcherPackage = device.launcherPackageName
-//        device.wait(Until.hasObject(By.pkg(launcherPackage)), TIMEOUT)
-//        waitForPackage(SETTINGS_PACKAGE)
-//
-//        val context = ApplicationProvider.getApplicationContext<Context>()
-//        val packageName = context.packageName
-//        val intent = context.packageManager.getLaunchIntentForPackage(packageName)
-//        context.startActivity(intent)
-//        device.wait(Until.hasObject(By.pkg(packageName)), TIMEOUT)
-//
-//
-//        device.findObject(By.res(packageName, "userInput")).text = textToSet
-//        device.findObject(By.res(packageName, "buttonChange")).click()
-//
-//        val result = device.findObject(By.res(packageName, "textToBeChanged")).text
-//        assertEquals(result, textToSet)
-//    }
-
     private fun waitForPackage(packageName: String) {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val intent = context.packageManager.getLaunchIntentForPackage(packageName)
@@ -80,11 +33,8 @@ class ChangeTextTest {
 
     @Before
     fun beforeEachTest() {
-        // Press home
         device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
         device.pressHome()
-
-        // Wait for launcher
         val launcherPackage = device.launcherPackageName
         device.wait(Until.hasObject(By.pkg(launcherPackage)), TIMEOUT)
     }
@@ -92,24 +42,59 @@ class ChangeTextTest {
     @Test
     fun testInternetSettings() {
         waitForPackage(SETTINGS_PACKAGE)
-
         device.findObject(
-            UiSelector().resourceId("android:id/title").instance(0)
+            UiSelector().resourceId("android:id/title").instance(1)
         ).click()
     }
 
     @Test
     fun testChangeText() {
-        val packageName = MODEL_PACKAGE
-        waitForPackage(packageName)
+        waitForPackage(MODEL_PACKAGE)
 
-        device.findObject(By.res(packageName, "userInput")).text = textToSet
-        device.findObject(By.res(packageName, "buttonChange")).click()
+        device.findObject(By.res(MODEL_PACKAGE, "userInput")).text = textToSet
+        device.findObject(By.res(MODEL_PACKAGE, "buttonChange")).click()
 
-        val result = device.findObject(By.res(packageName, "textToBeChanged")).text
+        val result = device.findObject(By.res(MODEL_PACKAGE, "textToBeChanged")).text
         assertEquals(result, textToSet)
     }
 
+    // Тест 1: Попытка установки пустой строки (включая пробельные символы)
+    @Test
+    fun testEmptyTextShouldNotChangeOriginalText() {
+        waitForPackage(MODEL_PACKAGE)
+
+        // Получаем исходный текст для сравнения
+        val originalText = device.findObject(By.res(MODEL_PACKAGE, "textToBeChanged")).text
+
+        // Пытаемся установить пустую строку
+        device.findObject(By.res(MODEL_PACKAGE, "userInput")).text = ""
+        device.findObject(By.res(MODEL_PACKAGE, "buttonChange")).click()
+
+        // Проверяем, что текст не изменился
+        val resultText = device.findObject(By.res(MODEL_PACKAGE, "textToBeChanged")).text
+        assertEquals("Текст должен остаться прежним при вводе пустой строки", originalText, resultText)
+    }
+
+    // Тест 2: Открытие текста в новой Activity
+    @Test
+    fun testOpenTextInNewActivity() {
+        waitForPackage(MODEL_PACKAGE)
+
+        val testText = "Text for New Activity"
+
+        // Вводим текст и нажимаем кнопку для открытия новой Activity
+        device.findObject(By.res(MODEL_PACKAGE, "userInput")).text = testText
+        device.findObject(By.res(MODEL_PACKAGE, "buttonActivity")).click()
+
+        // Ждем появления новой Activity и TextView с ID "text"
+        device.wait(Until.hasObject(By.res(MODEL_PACKAGE, "text")), TIMEOUT)
+
+        // Получаем текст из TextView во второй Activity
+        val resultText = device.findObject(By.res(MODEL_PACKAGE, "text")).text
+
+        // Проверяем, что текст совпадает с введенным
+        assertEquals("Текст в новой Activity должен совпадать с введенным", testText, resultText)
+    }
 }
 
 
